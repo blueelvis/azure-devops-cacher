@@ -10,12 +10,14 @@
  * The documentation of how CIFS mounts work can be found over [here](https://linux.die.net/man/8/mount.cifs)
  */
 
-import { IMount } from "../interfaces/IMount";
-import "execa";
+import { IMountService } from "../../interfaces/IMountService";
+import execa = require('execa');
 import telnet_client, { ConnectOptions } from "telnet-client";
 
 
-export class MountLinux implements IMount {
+// TODO -- Add logging in the class
+
+export class LinuxMountService implements IMountService {
     private _remoteFileShareUncPath: string;
     private _remoteFileShareUsername: string;
     private _remoteFileSharePassword: string;
@@ -38,27 +40,80 @@ export class MountLinux implements IMount {
      * Mounts a remote file share as a read-only file share at the specified directory.
      */
     async mountReadOnly(): Promise<boolean> {
-        if (!this.checkAccess()) {
+        if (!(await this.checkAccess())) {
             throw new Error(`Unable to connect the remote file at - [${this._remoteFileShareUncPath}] on port - [${this._port}]`);
         }
 
-        this._mountOptions.push("ro","serverino","vers=3.0");
+        this._mountOptions.push("ro","serverino","vers=3.0","dir_mode=0555","file_mode=0555");
 
-        throw new Error("Method not implemented.");
+        const execaCommandArguments: Array<string> = [
+            "mount",
+            "-t",
+            "cifs",
+            this._remoteFileShareUncPath,
+            this._hostPath,
+            "-o",
+            this._mountOptions.join(",")
+        ];
+        const execaClient = await execa("sudo", execaCommandArguments);
+        if (!execaClient.failed) {
+            this._isMounted = true;
+            return true;
+        } else {
+            this._isMounted = false;
+            return false;
+        }
     }
 
     /**
      * Mounts a remote file share as Read/Write at the specified directory.
      */
     async mountReadWriteOnly(): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        if (!(await this.checkAccess())) {
+            throw new Error(`Unable to connect the remote file at - [${this._remoteFileShareUncPath}] on port - [${this._port}]`);
+        }
+
+        this._mountOptions.push("rw","serverino","vers=3.0","dir_mode=0777","file_mode=0777");
+
+        const execaCommandArguments: Array<string> = [
+            "mount",
+            "-t",
+            "cifs",
+            this._remoteFileShareUncPath,
+            this._hostPath,
+            "-o",
+            this._mountOptions.join(",")
+        ];
+        const execaClient = await execa("sudo", execaCommandArguments);
+        if (!execaClient.failed) {
+            this._isMounted = true;
+            return true;
+        } else {
+            this._isMounted = false;
+            return false;
+        }
     }
 
     /**
-     * Unmounts the specified share
+     * Unmounts the specified share forcefully.
      */
     async unmount(): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        if (!this._isMounted) {
+            return true;
+        } else {
+            const execaCommandArguments: Array<string> = [
+                "umount",
+                "-f",
+                this._hostPath
+            ];
+            const execaClient = await execa("sudo", execaCommandArguments);
+            if (!execaClient.failed) {
+                this._isMounted = false;
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     /**
@@ -69,7 +124,7 @@ export class MountLinux implements IMount {
             const connection:telnet_client = new telnet_client();
             const connectOptions: ConnectOptions = {
                 port: this._port,
-                host: this._hostPath,
+                host: this._hostPath.replace('\\','').replace('//',''),
                 timeout: 1500
             };
             await connection.connect(connectOptions);
