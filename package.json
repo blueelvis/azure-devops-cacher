@@ -38,6 +38,7 @@
     "azure-pipelines-task-lib": "^3.0.1-preview",
     "bdd-stdin": "^0.2.0",
     "chalk": "^4.1.0",
+    "crypto-js": "^4.0.0",
     "execa": "^4.0.3",
     "inquirer": "^7.3.3",
     "node-emoji": "^1.10.0",
