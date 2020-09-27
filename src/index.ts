@@ -1,11 +1,17 @@
-#!/usr/bin/env node
+import tl = require('azure-pipelines-task-lib/task');
 
-import * as yargs from 'yargs';
+async function run() {
+    try {
+        const inputString: string | undefined = tl.getInput('samplestring', true);
+        if (inputString == 'bad') {
+            tl.setResult(tl.TaskResult.Failed, 'Bad input was given');
+            return;
+        }
+        console.log('Hello', inputString);
+    }
+    catch (err) {
+        tl.setResult(tl.TaskResult.Failed, err.message);
+    }
+}
 
-// prettier-ignore
-yargs
-  .commandDir('commands')
-  .demandCommand(1)
-  .help()
-  .version()
-  .argv;
+run();

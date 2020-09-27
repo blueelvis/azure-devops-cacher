@@ -3,5 +3,5 @@
  */
 
 export interface IHashService {
-
+    GenerateSha256Hash(message: string): Promise<string>;
 }
