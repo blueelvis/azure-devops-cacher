@@ -10,12 +10,16 @@
     "paths": {
       "*": [
         "node_modules/*",
-        "src/types/*"
+        "src/types/*",
       ]
     }
   },
   "include": [
     "src/**/*"
-  ]
+  ],
+  "typedocOptions": {
+    "mode": "modules",
+    "out": "docs"
+  }
 }
 
