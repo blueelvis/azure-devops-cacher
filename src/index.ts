@@ -5,6 +5,7 @@ import { FileService } from "./services/files/FileService";
 import { HashService } from "./services/hashing/HashService";
 import fs = require("fs-extra");
 import { AzureStorageFileShareService } from "./services/azure/storage/AzureStorageFileShareService";
+import { LinuxMountService } from "./services/mount/LinuxMountService";
 
 async function main() {
     const taskLibraryClient = await (new AzureDevOpsTaskService).getAzureDevOpsTaskServiceInstance();
@@ -22,10 +23,11 @@ async function main() {
         const fileService: FileService = new FileService();
 
 
+
         // const filesMatchingCacheKeyGlobPattern = fileService.GetFilesMatchingGlob(cacheKeyGlobPattern.split(","));
 
         // Match all the files which match the Glob Pattern in the System Default Working Directory. Ensure that the items are sorted.
-        const allFiles: string[] = taskLibraryClient.find(Constants.SYSTEM_DEFAULT_WORKING_DIRECTORY_VARIABLE);
+        const allFiles: string[] = taskLibraryClient.find(taskLibraryClient.getVariable(Constants.SYSTEM_DEFAULT_WORKING_DIRECTORY_VARIABLE));
         const filesMatchingCacheKeyGlobPatterns: string[] = (taskLibraryClient.match(allFiles, cacheKeyGlobPattern)).sort();
 
         // Generate hashes of each file.
@@ -45,6 +47,19 @@ async function main() {
 
         // If mountReadOnly is false, that means a directory with the name of cache key doesn't exist. Create the directory.
         await azureStorageFileShareService.EnsureDirectoryExists(cacheHashKey);
+
+        // Now, mount the file share at the path specified
+        const linuxMountService: LinuxMountService = new LinuxMountService(
+            `//${storageAccountName}.file.core.windows.net/${storageAccountFileShareName}/${cacheHashKey}`,
+            storageAccountName,
+            storageAccountKey,
+            taskLibraryClient.getVariable(Constants.CACHE_MOUNT_PATH_VARIABLE)
+        );
+        if (mountReadOnly) {
+            linuxMountService.mountReadOnly();
+        } else {
+            linuxMountService.mountReadWriteOnly();
+        }
 
     } catch (error) {
         taskLibraryClient.setResult(TaskResult.Failed, error.message)
