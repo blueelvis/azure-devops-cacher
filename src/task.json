@@ -1,12 +1,12 @@
 {
     "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
-    "id": "{{taskguid}}",
-    "name": "{{taskname}}",
-    "friendlyName": "{{taskfriendlyname}}",
-    "description": "{{taskdescription}}",
+    "id": "C4BC0274-FC29-4C93-9748-938F8EFB9E83",
+    "name": "Azure-DevOps-Cacher",
+    "friendlyName": "Azure DevOps Cacher",
+    "description": "An extension to do caching across branches and pipelines.",
     "helpMarkDown": "",
     "category": "Utility",
-    "author": "{{taskauthor}}",
+    "author": "JP's Labs",
     "version": {
         "Major": 0,
         "Minor": 1,
@@ -15,12 +15,44 @@
     "instanceNameFormat": "Echo $(samplestring)",
     "inputs": [
         {
-            "name": "samplestring",
+            "name": "storageAccountName",
             "type": "string",
-            "label": "Sample String",
+            "label": "Name of Storage Account",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "A sample string"
+            "helpMarkDown": "Name of Storage Account"
+        },
+        {
+            "name": "storageAccountKey",
+            "type": "string",
+            "label": "Storage Account Key",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Storage Account Key"
+        },
+        {
+            "name": "storageAccountFileShareName",
+            "type": "string",
+            "label": "Name of Storage Account File Share",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of Storage Account File Share"
+        },
+        {
+            "name": "cacheMountPath",
+            "type": "string",
+            "label": "Cache Mount Path",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Cache Mount Path"
+        },
+        {
+            "name": "cacheKey",
+            "type": "string",
+            "label": "Glob Pattern for Cache Key",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Glob Pattern for Cache Key"
         }
     ],
     "execution": {

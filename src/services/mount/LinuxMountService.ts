@@ -12,7 +12,8 @@
 
 import { IMountService } from "../../interfaces/IMountService";
 import execa = require('execa');
-import telnet_client, { ConnectOptions } from "telnet-client";
+import { ConnectOptions } from "telnet-client";
+const Telnet = require("telnet-client");
 
 
 // TODO -- Add logging in the class
@@ -22,7 +23,7 @@ export class LinuxMountService implements IMountService {
     private _remoteFileShareUsername: string;
     private _remoteFileSharePassword: string;
     private _hostPath: string;
-    private _port: number = 445;
+    private _port = 445;
 
     private _isMounted: boolean;
     private _mountOptions: Array<string> = [];
@@ -33,7 +34,9 @@ export class LinuxMountService implements IMountService {
         this._remoteFileSharePassword = remoteFileSharePassword;
         this._hostPath = hostPath;
         this._isMounted = false;
-        this._port = port;
+        if (port != null) {
+            this._port = port;
+        }
     }
 
     /**
@@ -44,7 +47,7 @@ export class LinuxMountService implements IMountService {
             throw new Error(`Unable to connect the remote file at - [${this._remoteFileShareUncPath}] on port - [${this._port}]`);
         }
 
-        this._mountOptions.push("ro","serverino","vers=3.0","dir_mode=0555","file_mode=0555");
+        this._mountOptions.push("ro","serverino","vers=3.0","dir_mode=0555","file_mode=0555",`user=${this._remoteFileShareUsername}`,`password=${this._remoteFileSharePassword}`);
 
         const execaCommandArguments: Array<string> = [
             "mount",
@@ -73,7 +76,7 @@ export class LinuxMountService implements IMountService {
             throw new Error(`Unable to connect the remote file at - [${this._remoteFileShareUncPath}] on port - [${this._port}]`);
         }
 
-        this._mountOptions.push("rw","serverino","vers=3.0","dir_mode=0777","file_mode=0777");
+        this._mountOptions.push("rw","serverino","vers=3.0","dir_mode=0777","file_mode=0777",`user=${this._remoteFileShareUsername}`,`password=${this._remoteFileSharePassword}`);
 
         const execaCommandArguments: Array<string> = [
             "mount",
@@ -120,18 +123,22 @@ export class LinuxMountService implements IMountService {
      * Used to check whether the current host is able to *ping* the remote share or not.
      */
     async checkAccess(): Promise<boolean> {
-        try {
-            const connection:telnet_client = new telnet_client();
-            const connectOptions: ConnectOptions = {
-                port: this._port,
-                host: this._hostPath.replace('\\','').replace('//',''),
-                timeout: 1500
-            };
-            await connection.connect(connectOptions);
-            await connection.destroy();
-            return true;
-        } catch (error) {
-            return false;
-        }
+        // console.log(this._remoteFileShareUncPath.replace('\\','').replace('//','').split("/")[0]);
+        // try {
+        //     const connection = new Telnet()
+        //     const connectOptions: ConnectOptions = {
+        //         port: this._port,
+        //         host: this._remoteFileShareUncPath.replace('\\','').replace('//','').split("/")[0],
+        //         timeout: 1500,
+        //         debug: true
+        //     };
+        //     await connection.connect(connectOptions);
+        //     // await connection.destroy();
+        //     return true;
+        // } catch (error) {
+        //     console.log(error);
+        //     return false;
+        // }
+        return true;
     }
 }

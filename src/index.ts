@@ -9,13 +9,15 @@ import { LinuxMountService } from "./services/mount/LinuxMountService";
 
 async function main() {
     const taskLibraryClient = await (new AzureDevOpsTaskService).getAzureDevOpsTaskServiceInstance();
+    taskLibraryClient.setVariable("hello","world");
+    console.log(taskLibraryClient.getVariables())
     try {
 
-        const storageAccountName: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_NAME_VARIABLE);
-        const storageAccountKey: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_KEY_VARIABLE);
-        const storageAccountFileShareName: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_FILE_SHARE_NAME_VARIABLE);
-        const cacheMountPath: string = taskLibraryClient.getInput(Constants.CACHE_MOUNT_PATH_VARIABLE);
-        const cacheKeyGlobPattern: string = taskLibraryClient.getInput(Constants.CACHE_KEY_GLOB_PATTERN_VARIABLE);
+        const storageAccountName: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_NAME_VARIABLE, true);
+        const storageAccountKey: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_KEY_VARIABLE, true);
+        const storageAccountFileShareName: string = taskLibraryClient.getInput(Constants.STORAGE_ACCOUNT_FILE_SHARE_NAME_VARIABLE, true);
+        const cacheMountPath: string = taskLibraryClient.getInput(Constants.CACHE_MOUNT_PATH_VARIABLE, true);
+        const cacheKeyGlobPattern: string = taskLibraryClient.getInput(Constants.CACHE_KEY_GLOB_PATTERN_VARIABLE, true);
 
         // Create Required Services
         const hashService = new HashService();
@@ -28,7 +30,7 @@ async function main() {
 
         // Match all the files which match the Glob Pattern in the System Default Working Directory. Ensure that the items are sorted.
         const allFiles: string[] = taskLibraryClient.find(taskLibraryClient.getVariable(Constants.SYSTEM_DEFAULT_WORKING_DIRECTORY_VARIABLE));
-        const filesMatchingCacheKeyGlobPatterns: string[] = (taskLibraryClient.match(allFiles, cacheKeyGlobPattern)).sort();
+        const filesMatchingCacheKeyGlobPatterns: string[] = (taskLibraryClient.match(allFiles, cacheKeyGlobPattern, taskLibraryClient.getVariable(Constants.SYSTEM_DEFAULT_WORKING_DIRECTORY_VARIABLE))).sort();
 
         // Generate hashes of each file.
         const hashes: string[] = [];
@@ -53,7 +55,7 @@ async function main() {
             `//${storageAccountName}.file.core.windows.net/${storageAccountFileShareName}/${cacheHashKey}`,
             storageAccountName,
             storageAccountKey,
-            taskLibraryClient.getVariable(Constants.CACHE_MOUNT_PATH_VARIABLE)
+            taskLibraryClient.getInput(Constants.CACHE_MOUNT_PATH_VARIABLE)
         );
         if (mountReadOnly) {
             linuxMountService.mountReadOnly();
