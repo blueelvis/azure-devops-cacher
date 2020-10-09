@@ -23,4 +23,14 @@ export class AzureStorageFileShareService {
         const directoryClient = this.storageShareClient.getDirectoryClient(directoryName);
         return directoryClient.exists();
     }
+
+    /**
+     * CheckIfFileExists
+     */
+    public async CheckIfFileExists(directoryName: string, fileName: string): Promise<boolean> {
+        const directoryClient = this.storageShareClient.getDirectoryClient(directoryName);
+        const fileClient = directoryClient.getFileClient(fileName);
+        
+        return fileClient.exists();
+    }
 }
